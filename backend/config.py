@@ -26,21 +26,24 @@ class Config:
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # Prevent reuse of stale database connections
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 1800
+    }
+
     TIDB_CA_PATH = os.getenv("TIDB_CA_PATH")
 
-    SQLALCHEMY_ENGINE_OPTIONS = {}
-
+    # Preserve TiDB SSL configuration
     if TIDB_CA_PATH and os.getenv("TIDB_HOST"):
-        SQLALCHEMY_ENGINE_OPTIONS = {
-            "connect_args": {
-                "ssl_ca": TIDB_CA_PATH,
-                "ssl_verify_cert": True,
-                "ssl_verify_identity": True
-            }
+        SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = {
+            "ssl_ca": TIDB_CA_PATH,
+            "ssl_verify_cert": True,
+            "ssl_verify_identity": True
         }
 
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SAMESITE = os.getenv("SESSION_COOKIE_SAMESITE", "Lax")
     SESSION_COOKIE_SECURE = (
         os.getenv("SESSION_COOKIE_SECURE", "False").lower() == "true"
     )
